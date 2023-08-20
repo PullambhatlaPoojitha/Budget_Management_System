@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>Home Page</title>
+</head>
+
+<body>
+	<h1>Welcome to the Home Page</h1>
+	<style>
+	body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  margin-top: 20px; /* Add some top margin to the heading */
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.centered-dropdown {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.centered-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.centered-button:hover {
+  background-color: #45a049;
+}
+</style>
+
+	
+	<div class="container">
+		<form id="departmentForm" th:action="@{/processDepartment}" method="get">
+			<label for="department">Select Department:</label>
+			<select id="department" name="department" class="centered-dropdown">
+				<option th:each="department : ${departmentNames}" th:value="${department.departmentId}"
+					th:text="${department.departmentName}"></option>
+			</select>
+
+			<button class="centered-button" type="submit">Submit</button>
+		</form>
+	</div>
+
+	<script th:inline="javascript">
+		document.getElementById("departmentForm").addEventListener("submit", function (event) {
+			event.preventDefault();
+
+			const selectedDepartmentId = document.getElementById("department").value;
+			const url = "/department/" + selectedDepartmentId;
+			window.location.href = url;
+		});
+	</script>
+</body>
+
+</html>

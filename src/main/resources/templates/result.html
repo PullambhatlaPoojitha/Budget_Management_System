@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Result Page</title>
+</head>
+<body>
+    <h2 th:text="'Selected Department: ' + ${department}"></h2>
+    <h3>Choose a table:</h3>
+    <button type="button" onclick="showTable('Income')">Income Table</button>
+    <button type="button" onclick="showTable('Expenditure-Recurring')">Expenditure-Recurring Table</button>
+    <button type="button" onclick="showTable('Expenditure-Non-Recurring')">Expenditure-Non-Recurring Table</button>
+
+    <div id="table-content"></div>
+
+    <script>
+        function showTable(tableName) {
+            var tableContent = "";
+
+            if (tableName === 'Income') {
+                tableContent = "<h3>Income Table</h3><select>";
+                
+
+                columns.forEach(function(column) {
+                    tableContent += "<option>" + column + "</option>";
+                });
+
+                tableContent += "</select>";
+            } else if (tableName === 'Expenditure-Recurring') {
+                // Code for Expenditure-Recurring table
+            } else if (tableName === 'Expenditure-Non-Recurring') {
+                // Code for Expenditure-Non-Recurring table
+            }
+
+            document.getElementById("table-content").innerHTML = tableContent;
+        }
+    </script>
+</body>
+</html>

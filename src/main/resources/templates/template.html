@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Thymeleaf Multi-Form Container</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<style>
+		.form-container {
+
+			max-height: 500px;
+			/* Set a maximum height for the form container */
+			overflow-y: auto;
+			/* Enable vertical scrolling if content overflows */
+			display: none;
+		}
+
+		.active-form {
+			display: block;
+		}
+
+		.readonly {
+			background-color: #f0f0f0;
+		}
+
+		.btn-group {
+			display: flex;
+			justify-content: center;
+			gap: 10px;
+			margin-bottom: 20px;
+		}
+
+		.toggle-form {
+			flex: 1;
+		}
+
+		.toggle-form.active {
+			background-color: #007bff;
+			color: white;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="container mt-5">
+		<div class="row">
+			<div class="col-md-8 offset-md-2">
+				<div class="card">
+					<div class="card-body">
+						<h4 class="text-center mb-4">Budget Details of Department</h4>
+						<div class="btn-group mb-3">
+							<button class="btn btn-outline-primary btn-sm toggle-form active"
+								onclick="toggleForm('incomeForm')" data-target="form1" id="incomeButton">Income</button>
+							<button class="btn btn-outline-primary btn-sm toggle-form"
+								onclick="toggleForm('recurringForm')" data-target="form2" id="recurringButton">Recurring
+								Expenditure</button>
+							<button class="btn btn-outline-primary btn-sm toggle-form"
+								onclick="toggleForm('nonRecurringForm')" data-target="form3"
+								id="nonRecurringButton">Non-Recurring Expenditure</button>
+							<button class="btn btn-outline-primary btn-sm" id="generatePdfButton">PDF</button>
+
+						</div>
+
+						<div class="form-container active-form" id="form1">
+							<form id="incomeForm" th:action="@{/submit-income}" method="post" th:csrf
+								onsubmit="formSubmitted('incomeForm')">
+
+
+								<label for="departmentId"></label>
+								<input class="form-control mb-3 readonly-input" type="hidden" id="departmentId"
+									name="departmentId" th:value="${departmentId}" readonly>
+
+
+
+
+
+
+								<div th:each="field : ${incomeFields}"
+									th:unless="${field.key == 'tuitionFee' or field.key == 'totalIncome'}">
+									<div th:if="${field.key != 'departmentId'}">
+										<label th:text="${field.value}"></label>
+										<input type="text" class="form-control mb-3"
+											th:attr="name=${field.key}, id=${field.key}, placeholder='Enter ' + ${field.value}"
+											required>
+									</div>
+								</div>
+
+
+								<div th:each="field : ${incomeFields}"
+									th:if="${field.key == 'tuitionFee' or field.key == 'totalIncome'}">
+									<label th:text="${field.value}"></label>
+									<input type="text"
+										th:attr="name=${field.key}, id=${field.key}, placeholder='Enter ' + ${field.value}"
+										class="form-control mb-3"
+										th:value="${field.key == 'departmentId' ? departmentId : ''}" th:readonly="true"
+										th:classappend="${field.key == 'tuitionFee' or field.key == 'totalIncome'} ? 'readonly-input'">
+								</div>
+
+								<button class="btn btn-success" onclick="submitIncomeDetails()"
+									type="submit">Submit</button>
+						</div>
+					</div>
+
+					</form>
+
+
+
+				</div>
+				<div class="form-container" id="form2">
+					<form id="recurringForm" th:action="@{/submit-recurring}" method="post" th:csrf
+						onsubmit="formSubmitted('recurringForm')">
+
+
+						<label for="departmentId"></label>
+						<input type="hidden" id="departmentId" name="departmentId" th:value="${departmentId}" readonly
+							class="form-control mb-3 readonly-input">
+						<!-- Loop for non-read-only fields -->
+						<div th:each="field : ${recurringFields}"
+							th:unless="${field.key == 'totalRecurringExpenditure' or field.key == 'academicExpenditure' or field.key == 'physicalExpenditure' or field.key == 'labMaintenance' or field.key == 'repairsAndMaintenance' or field.key == 'studentsExtraCoCurricularActivities' or field.key == 'researchAndDevelopment' or field.key == 'personnelExpenses' or field.key == 'statutoryInspectionsAndAccreditationExpenses'}">
+							<div th:if="${field.key != 'departmentId'}">
+								<label th:text="${field.value}"></label>
+								<input class="form-control mb-3" type="text"
+									th:attr="name=${field.key}, id=${field.key}, placeholder='Enter ' + ${field.value}"
+									required>
+							</div>
+						</div>
+
+						<!-- Loop for read-only fields -->
+						<div th:each="field : ${recurringFields}"
+							th:if="${field.key == 'totalRecurringExpenditure' or field.key == 'academicExpenditure' or field.key == 'physicalExpenditure' or field.key == 'labMaintenance' or field.key == 'repairsAndMaintenance' or field.key == 'studentsExtraCoCurricularActivities' or field.key == 'researchAndDevelopment' or field.key == 'personnelExpenses' or field.key == 'statutoryInspectionsAndAccreditationExpenses'}">
+							<label th:text="${field.value}"></label>
+							<input type="text"
+								th:attr="name=${field.key}, id=${field.key}, placeholder='Enter ' + ${field.value}"
+								class="form-control mb-3" th:value="${field.key == 'departmentId' ? departmentId : ''}"
+								th:readonly="true"
+								th:classappend="${field.key == 'totalRecurringExpenditure' or field.key == 'academicExpenditure' or field.key == 'physicalExpenditure' or field.key == 'labMaintenance' or field.key == 'repairsAndMaintenance' or field.key == 'studentsExtraCoCurricularActivities' or field.key == 'researchAndDevelopment' or field.key == 'personnelExpenses' or field.key == 'statutoryInspectionsAndAccreditationExpenses'} ? 'readonly-input'">
+						</div>
+
+						<button class="btn btn-success" onclick="submitRecurringDetails()" type="submit">Submit</button>
+					</form>
+				</div>
+				<div class="form-container" id="form3">
+					<form id="nonRecurringForm" th:action="@{/submit-nonrecurring}" method="post" th:csrf
+						onsubmit="formSubmitted('nonRecurringForm')">
+
+
+						<label for="departmentId"></label>
+						<input class="form-control mb-3 readonly-input" type="hidden" id="departmentId"
+							name="departmentId" th:value="${departmentId}" readonly>
+						<!-- Loop for non-read-only fields -->
+						<div th:each="field : ${nonRecurringFields}"
+							th:unless="${field.key == 'totalNonRecurringExpenditure'}">
+							<div th:if="${field.key != 'departmentId'}">
+								<label th:text="${field.value}"></label>
+								<input class="form-control mb-3" type="text"
+									th:attr="name=${field.key}, id=${field.key}, placeholder='Enter ' + ${field.value}"
+									required>
+							</div>
+						</div>
+
+						<!-- Loop for read-only fields -->
+						<div th:each="field : ${nonRecurringFields}"
+							th:if="${field.key== 'totalNonRecurringExpenditure'}">
+							<label th:text="${field.value}"></label>
+							<input class="form-control mb-3" type="text"
+								th:attr="name=${field.key}, id=${field.key}, placeholder='Enter ' + ${field.value}"
+								th:value="${field.key == 'departmentId' ? departmentId : ''}" th:readonly="true"
+								th:classappend="${field.key == 'totalNonRecurringExpenditure'} ? 'readonly-input'">
+						</div>
+
+						<button class="btn btn-success" onclick="submitNonRecurringDetails()"
+							type="submit">Submit</button>
+					</form>
+				</div>
+				
+			</div>
+		</div>
+	</div>
+	</div>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+	<script>
+
+		var departmentId = document.getElementById("departmentId").value;
+
+		document.getElementById("generatePdfButton").addEventListener("click", function () {
+			window.location.href = "/generate-pdf/" + departmentId;
+		});
+		$(document).ready(function () {
+			$('.toggle-form').click(function () {
+				const target = $(this).data('target');
+				$('.form-container').removeClass('active-form');
+				$('#' + target).addClass('active-form');
+				$('.toggle-form').removeClass('active');
+				$(this).addClass('active');
+			});
+
+			$('form').submit(function (event) {
+				event.preventDefault();
+				$('#successAlert').show();
+			});
+		});
+
+
+	</script>
+
+	<script th:inline="javascript">
+		var submittedForms = {
+			incomeForm: false,
+			recurringForm: false,
+			nonRecurringForm: false
+		};
+
+		function formSubmitted(formId) {
+			submittedForms[formId] = true;
+			checkAllFormsSubmitted();
+		}
+
+		function checkAllFormsSubmitted() {
+			var allSubmitted = Object.values(submittedForms).every(function (submitted) {
+				return submitted;
+			});
+
+			document.getElementById('totalSubmitButton').disabled = !allSubmitted;
+		}
+		var thankYouVisible = false; // Track whether the "Thank you" message is currently visible
+
+		function showDetails() {
+			var thankYouMessage = document.getElementById('thankYouMessage');
+			var reviewDetailsContainer = document.getElementById('reviewDetailsContainer');
+
+			// Toggle the "Thank you" message visibility
+			thankYouVisible = !thankYouVisible;
+
+			if (thankYouVisible) {
+				thankYouMessage.style.display = 'block';
+				reviewDetailsContainer.style.display = 'block';
+			} else {
+				thankYouMessage.style.display = 'none';
+				reviewDetailsContainer.style.display = 'none';
+			}
+		}
+
+
+
+		function toggleForm(formId) {
+			const form = document.getElementById(formId);
+			form.style.display = form.style.display === 'none' ? 'block' : 'none';
+
+			const otherForms = ['incomeForm', 'recurringForm', 'nonRecurringForm'];
+			otherForms.filter(f => f !== formId).forEach(id => {
+				document.getElementById(id).style.display = 'none';
+			});
+		}
+
+
+		document.getElementById("incomeForm").addEventListener("input", function (event) {
+			const target = event.target;
+
+			// Check if the changed input field is one of the relevant fields
+			if (
+				target.id.includes("btechBPharmBdsPolytechnicSchool") ||
+				target.id.includes("mtechMpharmMdsMbaMca")
+			) {
+				calculateTuitionFee();
+			}
+			if (
+				target.id.includes("btechBPharmBdsPolytechnicSchool") ||
+				target.id.includes("mtechMpharmMdsMbaMca") ||
+				target.id.includes("researchGrants") ||
+				target.id.includes("hospitalRevenueClinicWise") ||
+				target.id.includes("hostetFeeAndMessFee") ||
+				target.id.includes("transportationFee") ||
+				target.id.includes("otherRevenueRadioVishnu904")
+
+
+			) {
+				calculateTotalIncome();
+			}
+		});
+
+		function calculateTuitionFee() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#incomeForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (inputField.id.includes("btechBPharmBdsPolytechnicSchool") || inputField.id.includes("mtechMpharmMdsMbaMca")) {
+					totalIncome += inputValue;
+				}
+			}
+
+			const tuitionFeeField = document.getElementById('tuitionFee');
+			tuitionFeeField.value = totalIncome;
+		}
+		function calculateTotalIncome() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#incomeForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (inputField.id.includes("btechBPharmBdsPolytechnicSchool") ||
+					inputField.id.includes("mtechMpharmMdsMbaMca") ||
+					inputField.id.includes("researchGrants") ||
+					inputField.id.includes("hospitalRevenueClinicWise") ||
+					inputField.id.includes("hostetFeeAndMessFee") ||
+					inputField.id.includes("transportationFee") ||
+					inputField.id.includes("otherRevenueRadioVishnu904")) {
+					totalIncome += inputValue;
+				}
+			}
+
+			const totalIncomeField = document.getElementById('totalIncome');
+			totalIncomeField.value = totalIncome;
+		}
+
+
+
+		// Initial calculation when the page loads (in case some fields already have values)
+		// ... Other JavaScript code ...
+
+		// Initial calculation when the page loads (in case some fields already have values)
+		function submitIncomeDetails() {
+			alert("Income details successfully submitted! please click and fill Recurring Expenditure form")
+			const incomeFields = document.querySelectorAll('#incomeForm input[type="text"]');
+			// Parse the departmentId as an integer
+			const formData = [];
+
+			incomeFields.forEach((inputField) => {
+				const fieldName = inputField.getAttribute("name");
+				const fieldValue = inputField.value || '0';
+				formData.push({fieldName, fieldValue});
+			});
+
+			console.log(formData); // Display the contents of formData
+
+			fetch("/submit-income", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(formData),
+			})
+				.then((response) => response.text())
+				.then((data) => {
+					console.log(data); // You can handle the server's response here
+				})
+				.catch((error) => {
+					console.error("Error:", error);
+				});
+
+		}
+	</script>
+	<script th:inline="javascript">
+
+		document.getElementById("recurringForm").addEventListener("input", function (event) {
+			const target = event.target;
+
+			// Check if the changed input field is one of the relevant fields
+			if (
+
+				target.id.includes("advertisementExpenses") ||
+				target.id.includes("auditFee") ||
+				target.id.includes("bankCharges") ||
+				target.id.includes("booksAndPeriodicalsJournals") ||
+				target.id.includes("electricityCharges") ||
+				target.id.includes("financialChargesOrInterestCharges") ||
+				target.id.includes("generalExpenses") ||
+				target.id.includes("guestHouseMaintenance") ||
+				target.id.includes("horticultureExpenses") ||
+				target.id.includes("houseKeepingCharges") ||
+				target.id.includes("studentsInsuranceAndBuildingInsurance") ||
+				target.id.includes("professionalCharges") ||
+				target.id.includes("ratesAndTaxesProfessionalTaxPropertyTax") ||
+
+				target.id.includes("buildingMaintenance") ||
+				target.id.includes("vehicleMaintenance") ||
+				target.id.includes("electricalMaintenance") ||
+				target.id.includes("computerMaintenance") ||
+				target.id.includes("generatorMaintenance") ||
+				target.id.includes("furnitureMaintenance") ||
+				target.id.includes("securityCharges") ||
+				target.id.includes("telephoneCharges") ||
+				target.id.includes("transportationOfGoodsAndService") ||
+				target.id.includes("waterTreatmentPlantMaintenance") ||
+				target.id.includes("sewageTreatmentPlantExpenses") ||
+
+				target.id.includes("nbaNaacAutonomousFfc") ||
+				target.id.includes("affiliationFee") ||
+				target.id.includes("jntuCommonServiceFees") ||
+				target.id.includes("studentsGiftsMeritPrizes") ||
+				target.id.includes("governingBodyExpenses") ||
+				target.id.includes("facultyCarHireCharges") ||
+				target.id.includes("facultyDevelopmentPrograms") ||
+				target.id.includes("examinationExpensesBoardOfStudyExpenses") ||
+				target.id.includes("staffConveyanceAndTravellingExpenses") ||
+				target.id.includes("hospitalStifundExpenses") ||
+				target.id.includes("hospitalityCharges") ||
+				target.id.includes("inspectionChargesAicteJntuNtruhs") ||
+				target.id.includes("internetWebsiteExpenses") ||
+				target.id.includes("firstInductionProgram") ||
+				target.id.includes("annualDayExpenses") ||
+				target.id.includes("specifyAndOtherFunctions") ||
+				target.id.includes("consumables") ||
+				target.id.includes("glasswares") ||
+				target.id.includes("membershipCertificationExps") ||
+				target.id.includes("pgNewCoursesNewColleges") ||
+				target.id.includes("postageAndCourierCharges") ||
+				target.id.includes("printingAndStationery") ||
+				target.id.includes("inHouseRandD") ||
+				target.id.includes("consultancyIncentives") ||
+				target.id.includes("seedFunding") ||
+				target.id.includes("incentivesForPaperPublication") ||
+				target.id.includes("incentivesOnPatents") ||
+				target.id.includes("seminarAndWorkshops") ||
+				target.id.includes("studentsExtraCurricularActivitiesDevelopment") ||
+				target.id.includes("remunerationsToVisitingFaculty") ||
+				target.id.includes("placementTrainingAndRecruitmentCell") ||
+				target.id.includes("fmVtvMaintenance") ||
+				target.id.includes("studentsConcessionFee") ||
+				target.id.includes("grantsExpenditure") ||
+				target.id.includes("boardOfStudyExpenses") ||
+				target.id.includes("salariesAndWages") ||
+				target.id.includes("providentFundEpfFpf") ||
+				target.id.includes("staffWelfare") ||
+				target.id.includes("contributionToEsi") ||
+				target.id.includes("mediclaim") ||
+				target.id.includes("gratuityProvisionPremium")
+
+
+			) {
+				calculateRecurringIncome();
+			}
+			if (
+				target.id.includes("advertisementExpenses") ||
+				target.id.includes("auditFee") ||
+				target.id.includes("bankCharges") ||
+				target.id.includes("booksAndPeriodicalsJournals") ||
+				target.id.includes("electricityCharges") ||
+				target.id.includes("financialChargesOrInterestCharges") ||
+				target.id.includes("generalExpenses") ||
+				target.id.includes("guestHouseMaintenance") ||
+				target.id.includes("horticultureExpenses") ||
+				target.id.includes("houseKeepingCharges") ||
+				target.id.includes("studentsInsuranceAndBuildingInsurance") ||
+				target.id.includes("professionalCharges") ||
+				target.id.includes("ratesAndTaxesProfessionalTaxPropertyTax") ||
+
+				target.id.includes("buildingMaintenance") ||
+				target.id.includes("vehicleMaintenance") ||
+				target.id.includes("electricalMaintenance") ||
+				target.id.includes("computerMaintenance") ||
+				target.id.includes("generatorMaintenance") ||
+				target.id.includes("furnitureMaintenance") ||
+				target.id.includes("securityCharges") ||
+				target.id.includes("telephoneCharges") ||
+				target.id.includes("transportationOfGoodsAndService") ||
+				target.id.includes("waterTreatmentPlantMaintenance") ||
+				target.id.includes("sewageTreatmentPlantExpenses")
+
+
+			) {
+				calculatePhysicalExpenditureIncome();
+			}
+			if (
+				target.id.includes("nbaNaacAutonomousFfc") ||
+				target.id.includes("affiliationFee") ||
+				target.id.includes("jntuCommonServiceFees") ||
+				target.id.includes("studentsGiftsMeritPrizes") ||
+				target.id.includes("governingBodyExpenses") ||
+				target.id.includes("facultyCarHireCharges") ||
+				target.id.includes("facultyDevelopmentPrograms") ||
+				target.id.includes("examinationExpensesBoardOfStudyExpenses") ||
+				target.id.includes("staffConveyanceAndTravellingExpenses") ||
+				target.id.includes("hospitalStifundExpenses") ||
+				target.id.includes("hospitalityCharges") ||
+				target.id.includes("inspectionChargesAicteJntuNtruhs") ||
+				target.id.includes("internetWebsiteExpenses") ||
+				target.id.includes("firstInductionProgram") ||
+				target.id.includes("annualDayExpenses") ||
+				target.id.includes("specifyAndOtherFunctions") ||
+				target.id.includes("consumables") ||
+				target.id.includes("glasswares") ||
+				target.id.includes("membershipCertificationExps") ||
+				target.id.includes("pgNewCoursesNewColleges") ||
+				target.id.includes("postageAndCourierCharges") ||
+				target.id.includes("printingAndStationery") ||
+				target.id.includes("inHouseRandD") ||
+				target.id.includes("consultancyIncentives") ||
+				target.id.includes("seedFunding") ||
+				target.id.includes("incentivesForPaperPublication") ||
+				target.id.includes("incentivesOnPatents") ||
+				target.id.includes("seminarAndWorkshops") ||
+				target.id.includes("studentsExtraCurricularActivitiesDevelopment") ||
+				target.id.includes("remunerationsToVisitingFaculty") ||
+				target.id.includes("placementTrainingAndRecruitmentCell") ||
+				target.id.includes("fmVtvMaintenance") ||
+				target.id.includes("studentsConcessionFee") ||
+				target.id.includes("grantsExpenditure") ||
+				target.id.includes("boardOfStudyExpenses")
+
+
+			) {
+				calculateAcedamicExpenditureIncome();
+			}
+			if (
+				target.id.includes("consumables") ||
+				target.id.includes("glasswares")
+
+
+			) {
+				calculateLabMaintainenceIncome();
+			}
+			if (
+				target.id.includes("nbaNaacAutonomousFfc")
+
+
+			) {
+				statutoryInspectionsAndAccreditationExpenses();
+			}
+			if (
+				target.id.includes("firstInductionProgram") ||
+				target.id.includes("annualDayExpenses") ||
+				target.id.includes("specifyAndOtherFunctions")
+
+
+			) {
+				studentsExtraCoCurricularActivities();
+			}
+			if (
+				target.id.includes("inHouseRandD") ||
+				target.id.includes("consultancyIncentives") ||
+				target.id.includes("seedFunding") ||
+				target.id.includes("incentivesForPaperPublication") ||
+				target.id.includes("incentivesOnPatents")
+
+
+			) {
+				researchAndDevelopment();
+			}
+			if (
+				target.id.includes("salariesAndWages") ||
+				target.id.includes("providentFundEpfFpf") ||
+				target.id.includes("staffWelfare") ||
+				target.id.includes("contributionToEsi") ||
+				target.id.includes("mediclaim") ||
+				target.id.includes("gratuityProvisionPremium")
+
+			) {
+				personnelExpenses();
+			}
+			if (
+				target.id.includes("buildingMaintenance") ||
+				target.id.includes("vehicleMaintenance") ||
+				target.id.includes("electricalMaintenance") ||
+				target.id.includes("computerMaintenance") ||
+				target.id.includes("generatorMaintenance") ||
+				target.id.includes("furnitureMaintenance")
+
+			) {
+				calculateRepairandMaintainanceIncome();
+			}
+		});
+		function researchAndDevelopment() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+					inputField.id.includes("inHouseRandD") ||
+					inputField.id.includes("consultancyIncentives") ||
+					inputField.id.includes("seedFunding") ||
+					inputField.id.includes("incentivesForPaperPublication") ||
+					inputField.id.includes("incentivesOnPatents")) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('researchAndDevelopment');
+			totalIncomeField.value = totalIncome;
+
+
+
+		}
+
+		function personnelExpenses() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+					inputField.id.includes("salariesAndWages") ||
+					inputField.id.includes("providentFundEpfFpf") ||
+					inputField.id.includes("staffWelfare") ||
+					inputField.id.includes("contributionToEsi") ||
+					inputField.id.includes("mediclaim") ||
+					inputField.id.includes("gratuityProvisionPremium")
+				) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('personnelExpenses');
+			totalIncomeField.value = totalIncome;
+
+		}
+
+		function studentsExtraCoCurricularActivities() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+					inputField.id.includes("firstInductionProgram") ||
+					inputField.id.includes("annualDayExpenses") ||
+					inputField.id.includes("specifyAndOtherFunctions")
+				) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('studentsExtraCoCurricularActivities');
+			totalIncomeField.value = totalIncome;
+
+		}
+
+		function statutoryInspectionsAndAccreditationExpenses() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+					inputField.id.includes("nbaNaacAutonomousFfc")) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('statutoryInspectionsAndAccreditationExpenses');
+			totalIncomeField.value = totalIncome;
+
+		}
+
+		function calculateRepairandMaintainanceIncome() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+					inputField.id.includes("buildingMaintenance") ||
+					inputField.id.includes("vehicleMaintenance") ||
+					inputField.id.includes("electricalMaintenance") ||
+					inputField.id.includes("computerMaintenance") ||
+					inputField.id.includes("generatorMaintenance") ||
+					inputField.id.includes("furnitureMaintenance")) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('repairsAndMaintenance');
+			totalIncomeField.value = totalIncome;
+
+		}
+		function calculateLabMaintainenceIncome() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+					inputField.id.includes("consumables") ||
+					inputField.id.includes("glasswares")
+				) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('labMaintenance');
+			totalIncomeField.value = totalIncome;
+		}
+		function calculatePhysicalExpenditureIncome() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+					inputField.id.includes("advertisementExpenses") ||
+					inputField.id.includes("auditFee") ||
+					inputField.id.includes("bankCharges") ||
+					inputField.id.includes("booksAndPeriodicalsJournals") ||
+					inputField.id.includes("electricityCharges") ||
+					inputField.id.includes("financialChargesOrInterestCharges") ||
+					inputField.id.includes("generalExpenses") ||
+					inputField.id.includes("guestHouseMaintenance") ||
+					inputField.id.includes("horticultureExpenses") ||
+					inputField.id.includes("houseKeepingCharges") ||
+					inputField.id.includes("studentsInsuranceAndBuildingInsurance") ||
+					inputField.id.includes("professionalCharges") ||
+					inputField.id.includes("ratesAndTaxesProfessionalTaxPropertyTax") ||
+
+					inputField.id.includes("buildingMaintenance") ||
+					inputField.id.includes("vehicleMaintenance") ||
+					inputField.id.includes("electricalMaintenance") ||
+					inputField.id.includes("computerMaintenance") ||
+					inputField.id.includes("generatorMaintenance") ||
+					inputField.id.includes("furnitureMaintenance") ||
+					inputField.id.includes("securityCharges") ||
+					inputField.id.includes("telephoneCharges") ||
+					inputField.id.includes("transportationOfGoodsAndService") ||
+					inputField.id.includes("waterTreatmentPlantMaintenance") ||
+					inputField.id.includes("sewageTreatmentPlantExpenses")) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('physicalExpenditure');
+			totalIncomeField.value = totalIncome;
+
+		}
+		function calculateAcedamicExpenditureIncome() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+					inputField.id.includes("nbaNaacAutonomousFfc") ||
+					inputField.id.includes("affiliationFee") ||
+					inputField.id.includes("jntuCommonServiceFees") ||
+					inputField.id.includes("studentsGiftsMeritPrizes") ||
+					inputField.id.includes("governingBodyExpenses") ||
+					inputField.id.includes("facultyCarHireCharges") ||
+					inputField.id.includes("facultyDevelopmentPrograms") ||
+					inputField.id.includes("examinationExpensesBoardOfStudyExpenses") ||
+					inputField.id.includes("staffConveyanceAndTravellingExpenses") ||
+					inputField.id.includes("hospitalStifundExpenses") ||
+					inputField.id.includes("hospitalityCharges") ||
+					inputField.id.includes("inspectionChargesAicteJntuNtruhs") ||
+					inputField.id.includes("internetWebsiteExpenses") ||
+					inputField.id.includes("firstInductionProgram") ||
+					inputField.id.includes("annualDayExpenses") ||
+					inputField.id.includes("specifyAndOtherFunctions") ||
+					inputField.id.includes("consumables") ||
+					inputField.id.includes("glasswares") ||
+					inputField.id.includes("membershipCertificationExps") ||
+					inputField.id.includes("pgNewCoursesNewColleges") ||
+					inputField.id.includes("postageAndCourierCharges") ||
+					inputField.id.includes("printingAndStationery") ||
+					inputField.id.includes("inHouseRandD") ||
+					inputField.id.includes("consultancyIncentives") ||
+					inputField.id.includes("seedFunding") ||
+					inputField.id.includes("incentivesForPaperPublication") ||
+					inputField.id.includes("incentivesOnPatents") ||
+					inputField.id.includes("seminarAndWorkshops") ||
+					inputField.id.includes("studentsExtraCurricularActivitiesDevelopment") ||
+					inputField.id.includes("remunerationsToVisitingFaculty") ||
+					inputField.id.includes("placementTrainingAndRecruitmentCell") ||
+					inputField.id.includes("fmVtvMaintenance") ||
+					inputField.id.includes("studentsConcessionFee") ||
+					inputField.id.includes("grantsExpenditure") ||
+					inputField.id.includes("boardOfStudyExpenses")) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('academicExpenditure');
+			totalIncomeField.value = totalIncome;
+
+		}
+
+
+		function calculateRecurringIncome() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (
+
+					inputField.id.includes("advertisementExpenses") ||
+					inputField.id.includes("auditFee") ||
+					inputField.id.includes("bankCharges") ||
+					inputField.id.includes("booksAndPeriodicalsJournals") ||
+					inputField.id.includes("electricityCharges") ||
+					inputField.id.includes("financialChargesOrInterestCharges") ||
+					inputField.id.includes("generalExpenses") ||
+					inputField.id.includes("guestHouseMaintenance") ||
+					inputField.id.includes("horticultureExpenses") ||
+					inputField.id.includes("houseKeepingCharges") ||
+					inputField.id.includes("studentsInsuranceAndBuildingInsurance") ||
+					inputField.id.includes("professionalCharges") ||
+					inputField.id.includes("ratesAndTaxesProfessionalTaxPropertyTax") ||
+
+					inputField.id.includes("buildingMaintenance") ||
+					inputField.id.includes("vehicleMaintenance") ||
+					inputField.id.includes("electricalMaintenance") ||
+					inputField.id.includes("computerMaintenance") ||
+					inputField.id.includes("generatorMaintenance") ||
+					inputField.id.includes("furnitureMaintenance") ||
+					inputField.id.includes("securityCharges") ||
+					inputField.id.includes("telephoneCharges") ||
+					inputField.id.includes("transportationOfGoodsAndService") ||
+					inputField.id.includes("waterTreatmentPlantMaintenance") ||
+					inputField.id.includes("sewageTreatmentPlantExpenses") ||
+
+					inputField.id.includes("nbaNaacAutonomousFfc") ||
+					inputField.id.includes("affiliationFee") ||
+					inputField.id.includes("jntuCommonServiceFees") ||
+					inputField.id.includes("studentsGiftsMeritPrizes") ||
+					inputField.id.includes("governingBodyExpenses") ||
+					inputField.id.includes("facultyCarHireCharges") ||
+					inputField.id.includes("facultyDevelopmentPrograms") ||
+					inputField.id.includes("examinationExpensesBoardOfStudyExpenses") ||
+					inputField.id.includes("staffConveyanceAndTravellingExpenses") ||
+					inputField.id.includes("hospitalStifundExpenses") ||
+					inputField.id.includes("hospitalityCharges") ||
+					inputField.id.includes("inspectionChargesAicteJntuNtruhs") ||
+					inputField.id.includes("internetWebsiteExpenses") ||
+					inputField.id.includes("firstInductionProgram") ||
+					inputField.id.includes("annualDayExpenses") ||
+					inputField.id.includes("specifyAndOtherFunctions") ||
+					inputField.id.includes("consumables") ||
+					inputField.id.includes("glasswares") ||
+					inputField.id.includes("membershipCertificationExps") ||
+					inputField.id.includes("pgNewCoursesNewColleges") ||
+					inputField.id.includes("postageAndCourierCharges") ||
+					inputField.id.includes("printingAndStationery") ||
+					inputField.id.includes("inHouseRandD") ||
+					inputField.id.includes("consultancyIncentives") ||
+					inputField.id.includes("seedFunding") ||
+					inputField.id.includes("incentivesForPaperPublication") ||
+					inputField.id.includes("incentivesOnPatents") ||
+					inputField.id.includes("seminarAndWorkshops") ||
+					inputField.id.includes("studentsExtraCurricularActivitiesDevelopment") ||
+					inputField.id.includes("remunerationsToVisitingFaculty") ||
+					inputField.id.includes("placementTrainingAndRecruitmentCell") ||
+					inputField.id.includes("fmVtvMaintenance") ||
+					inputField.id.includes("studentsConcessionFee") ||
+					inputField.id.includes("grantsExpenditure") ||
+					inputField.id.includes("boardOfStudyExpenses") ||
+
+					inputField.id.includes("salariesAndWages") ||
+					inputField.id.includes("providentFundEpfFpf") ||
+					inputField.id.includes("staffWelfare") ||
+					inputField.id.includes("contributionToEsi") ||
+					inputField.id.includes("mediclaim") ||
+					inputField.id.includes("gratuityProvisionPremium")
+				) {
+					totalIncome += inputValue;
+				}
+			}
+
+			// Create a new readonly input element with a specific name
+			const totalIncomeField = document.getElementById('totalRecurringExpenditure');
+			totalIncomeField.value = totalIncome;
+
+		}
+
+
+		// Initial calculation when the page loads (in case some fields already have values)
+		// ... Other JavaScript code ...
+
+		// Initial calculation when the page loads (in case some fields already have values)
+		function submitRecurringDetails() {
+			alert("Recurring details successfully submitted! please click and fill Non Recurring Expenditure form")
+			const incomeFields = document.querySelectorAll('#recurringForm input[type="text"]');
+
+			const formData = [];
+
+			incomeFields.forEach((inputField) => {
+				const fieldName = inputField.getAttribute("name");
+				const fieldValue = inputField.value || '0';
+				formData.push({fieldName, fieldValue});
+			});
+
+			console.log(formData);
+
+			fetch("/submit-recurring", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(formData),
+			})
+				.then((response) => response.text())
+				.then((data) => {
+					console.log(data);
+				})
+				.catch((error) => {
+					console.error("Error:", error);
+				});
+		}
+
+
+
+
+
+
+
+	</script>
+	<script>
+		document.getElementById("nonRecurringForm").addEventListener("input", function (event) {
+			const target = event.target;
+
+			// Check if the changed input field is one of the relevant fields
+			if (
+				target.id.includes("labEquipments") ||
+				target.id.includes("computersAndPeripherals") ||
+				target.id.includes("softwaresOfAllDepartments") ||
+				target.id.includes("furnitureAndFixtures") ||
+				target.id.includes("airConditionerProjectorsUps") ||
+				target.id.includes("electricalEquipment") ||
+				target.id.includes("libraryBooksAndJournals") ||
+				target.id.includes("sportsEquipment") ||
+				target.id.includes("motorVehicles") ||
+				target.id.includes("infrastructureRequirements")
+			) {
+				calculateTotalNonRecurring();
+			}
+
+		});
+
+		function calculateTotalNonRecurring() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#nonRecurringForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (inputField.id.includes("labEquipments") || inputField.id.includes("computersAndPeripherals") ||
+					inputField.id.includes("softwaresOfAllDepartments") || inputField.id.includes("furnitureAndFixtures") ||
+					inputField.id.includes("airConditionerProjectorsUps") || inputField.id.includes("electricalEquipment") ||
+					inputField.id.includes("libraryBooksAndJournals") || inputField.id.includes("sportsEquipment") ||
+					inputField.id.includes("motorVehicles") || inputField.id.includes("infrastructureRequirements")
+				) {
+					totalIncome += inputValue;
+				}
+			}
+
+			const tuitionFeeField = document.getElementById('totalNonRecurringExpenditure');
+			tuitionFeeField.value = totalIncome;
+		}
+		function calculateTotalIncome() {
+			let totalIncome = 0;
+			const incomeFields = document.querySelectorAll('#incomeForm input[type="text"]');
+
+			for (const inputField of incomeFields) {
+				const inputValue = parseFloat(inputField.value) || 0;
+
+				// Check if the field name contains "BTech_BPharm_BDS_Polytechnic_School" or "MTech_Mpharm_MDS_MBA_MCA"
+				if (inputField.id.includes("btechBPharmBdsPolytechnicSchool") ||
+					inputField.id.includes("mtechMpharmMdsMbaMca") ||
+					inputField.id.includes("researchGrants") ||
+					inputField.id.includes("hospitalRevenueClinicWise") ||
+					inputField.id.includes("hostetFeeAndMessFee") ||
+					inputField.id.includes("transportationFee") ||
+					inputField.id.includes("otherRevenueRadioVishnu904")) {
+					totalIncome += inputValue;
+				}
+			}
+
+			const totalIncomeField = document.getElementById('totalIncome');
+			totalIncomeField.value = totalIncome;
+		}
+
+
+
+		// Initial calculation when the page loads (in case some fields already have values)
+		// ... Other JavaScript code ...
+
+		// Initial calculation when the page loads (in case some fields already have values)
+		function submitNonRecurringDetails() {
+			alert("Non Recurring details successfully submitted! please click submit")
+			const incomeFields = document.querySelectorAll('#nonRecurringForm input[type="text"]');
+			// Parse the departmentId as an integer
+			const formData = [];
+
+			incomeFields.forEach((inputField) => {
+				const fieldName = inputField.getAttribute("name");
+				const fieldValue = inputField.value || '0';
+				formData.push({fieldName, fieldValue});
+			});
+
+			console.log(formData); // Display the contents of formData
+
+			fetch("/submit-nonrecurring", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(formData),
+			})
+				.then((response) => response.text())
+				.then((data) => {
+					console.log(data); // You can handle the server's response here
+				})
+				.catch((error) => {
+					console.error("Error:", error);
+				});
+		}
+
+	</script>
+
+</body>
+
+</html>

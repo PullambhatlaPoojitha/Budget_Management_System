@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>Department Budget Details</title>
+</head>
+
+
+
+
+<body>
+	<h1>Budget Details for Department</h1>
+	<style>
+		/* Common styles for .form-container and .form-container input[type="text"], .form-container button[type="button"] */
+		.form-container,
+		.form-container input[type="text"],
+		.form-container button[type="button"] {
+			width: 400px;
+			margin: 0 auto;
+			padding: 20px;
+			border-radius: 5px;
+			background-color: #f9f9f9;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+		}
+
+
+
+		/* Center the form container on the page */
+		body {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+			font-family: Arial, sans-serif;
+			padding-top: 50px;
+			/* Add some padding to the top of the body */
+			overflow-y: hidden;
+
+		}
+
+		/* Style for the form header */
+		.form-container h2 {
+			text-align: center;
+			margin-bottom: 20px;
+			color: #333;
+		}
+
+		/* Style for the labels */
+		.form-container label {
+			display: block;
+			margin-bottom: 10px;
+			color: #666;
+		}
+
+		/* Style for the text inputs */
+		.form-container input[type="text"] {
+			width: 100%;
+			padding: 10px;
+			margin-bottom: 15px;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+			transition: border-color 0.3s ease;
+
+		}
+
+		/* Style for the read-only fields */
+		.form-container .readonly-input {
+			background-color: #f2f2f2;
+			color: #777;
+			cursor: not-allowed;
+			border: none;
+		}
+
+		/* Style for the submit button */
+		.form-container button[type="button"] {
+			width: 100%;
+			padding: 10px;
+			background-color: #4CAF50;
+			color: #fff;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		/* Hover effect for the submit button */
+		.form-container button[type="button"]:hover {
+			background-color: #45a049;
+		}
+
+		/* Style for the button container */
+		.button-container {
+			display: flex;
+			justify-content: center;
+			position: fixed;
+			top: 20px;
+			left: 0;
+			right: 0;
+			background-color: #f9f9f9;
+			padding: 10px 0;
+			z-index: 999;
+			/* To make sure the buttons stay on top */
+		}
+
+		/* Style for the buttons */
+		.button-container button {
+			margin: 0 5px;
+			padding: 10px 20px;
+			font-size: 16px;
+			background-color: #4CAF50;
+			color: #fff;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		/* Hover effect for the buttons */
+		.button-container button:hover {
+			background-color: #45a049;
+		}
+
+		.hidden {
+			display: none;
+		}
+
+		.form-scroll-container {
+			max-height: 400px;
+			overflow-y: auto;
+			/* Enable scrolling within the form */
+			overflow-x: hidden;
+			/* Hide horizontal scrolling */
+
+		}
+
+		ul.no-dots {
+			list-style: none;
+		}
+	</style>
+
+	<div class="button-container">
+		<button id="incomeButton" onclick="toggleForm('incomeForm')">1.Income Form</button>
+		<button id="recurringButton" onclick="toggleForm('recurringForm')">2.Recurring Expenditure Form</button>
+		<button id="nonRecurringButton" onclick="toggleForm('nonRecurringForm')">3.Non-Recurring Expenditure
+			Form</button>
+		<button id="totalSubmitButton" onclick="window.location.href='/generate-pdf'">4.Review</button>
+	</div>
+
+	</div>
+
+	<div class="form-scroll-container hidden" id="incomeForm">
+		<div class="form-container">
+			<form id="incomeForm" th:action="@{/submit-income}" method="post" th:csrf
+				onsubmit="formSubmitted('incomeForm')">
+
+
+
+				<h2>Please fill the income details </h2>
+				<label for="departmentId">Department ID</label>
+				<input type="text" id="departmentId" name="departmentId" th:value="${departmentId}" readonly
+					class="readonly-input">
+				<!-- Loop for non-read-only fields -->
+				<div th:each="field : ${incomeFields}" th:unless="${field == 'tuitionFee' or field == 'totalIncome'}">
+					<div th:if="${field != 'departmentId'}">
+						<label th:text="${field}"></label>
+						<input type="text" th:attr="name=${field}, id=${field}, placeholder='Enter ' + ${field}"
+							required>
+					</div>
+				</div>
+
+				<!-- Loop for read-only fields -->
+				<div th:each="field : ${incomeFields}" th:if="${field == 'tuitionFee' or field == 'totalIncome'}">
+					<label th:text="${field}"></label>
+					<input type="text" th:attr="name=${field}, id=${field}, placeholder='Enter ' + ${field}"
+						th:value="${field == 'departmentId' ? departmentId : ''}" th:readonly="true"
+						th:classappend="${field == 'tuitionFee' or field == 'totalIncome'} ? 'readonly-input'">
+				</div>
+
+				<button class="btn btn-success" type="submit">Submit</button>
+			</form>
+		</div>
+	</div>
+
+	<div class="form-scroll-container hidden" id="recurringForm">
+
+
+		<div class="form-container">
+			<form id="recurringForm" th:action="@{/submit-recurring}" method="post" th:csrf
+				onsubmit="formSubmitted('recurringForm')">
+
+				<h2>Recurring Form</h2>
+
+				<label for="departmentId">Department ID</label>
+				<input type="text" id="departmentId" name="departmentId" th:value="${departmentId}" readonly
+					class="readonly-input">
+				<!-- Loop for non-read-only fields -->
+				<div th:each="field : ${recurringFields}"
+					th:unless="${field == 'totalRecurringExpenditure' or field == 'academicExpenditure' or field == 'physicalExpenditure' or field == 'labMaintenance' or field == 'repairsAndMaintenance' or field == 'studentsExtraCoCurricularActivities' or field == 'researchAndDevelopment' or field == 'personnelExpenses' or field == 'statutoryInspectionsAndAccreditationExpenses'}">
+					<div th:if="${field != 'departmentId'}">
+						<label th:text="${field}"></label>
+						<input type="text" th:attr="name=${field}, id=${field}, placeholder='Enter ' + ${field}"
+							required>
+					</div>
+				</div>
+
+				<!-- Loop for read-only fields -->
+				<div th:each="field : ${recurringFields}"
+					th:if="${field == 'totalRecurringExpenditure' or field == 'academicExpenditure' or field == 'physicalExpenditure' or field == 'labMaintenance' or field == 'repairsAndMaintenance' or field == 'studentsExtraCoCurricularActivities' or field == 'researchAndDevelopment' or field == 'personnelExpenses' or field == 'statutoryInspectionsAndAccreditationExpenses'}">
+					<label th:text="${field}"></label>
+					<input type="text" th:attr="name=${field}, id=${field}, placeholder='Enter ' + ${field}"
+						th:value="${field == 'departmentId' ? departmentId : ''}" th:readonly="true"
+						th:classappend="${field == 'totalRecurringExpenditure' or field == 'academicExpenditure' or field == 'physicalExpenditure' or field == 'labMaintenance' or field == 'repairsAndMaintenance' or field == 'studentsExtraCoCurricularActivities' or field == 'researchAndDevelopment' or field == 'personnelExpenses' or field == 'statutoryInspectionsAndAccreditationExpenses'} ? 'readonly-input'">
+				</div>
+
+				<button class="btn btn-success" type="submit">Submit</button>
+			</form>
+		</div>
+	</div>
+
+	<div class="form-scroll-container hidden" id="nonRecurringForm">
+
+		<div class="form-container">
+			<form id="nonRecurringForm" th:action="@{/submit-nonrecurring}" method="post" th:csrf
+				onsubmit="formSubmitted('nonRecurringForm')">
+
+				<h2>Non Recurring Form</h2>
+				<ul class="no-dots">
+					<!-- Your Thymeleaf loop to generate the input fields -->
+					<li>
+						<label for="departmentId">Department ID</label>
+						<input type="text" id="departmentId" name="departmentId" th:value="${departmentId}" readonly
+							class="readonly-input">
+					</li>
+					<!-- Loop for non-read-only fields -->
+					<li th:each="field : ${nonRecurringFields}" th:unless="${field == 'totalNonRecurringExpenditure'
+                                                            }">
+						<th:block th:if="${field != 'departmentId'}">
+
+							<label th:text="${field}"></label>
+							<input type="text" th:attr="name=${field}, id=${field}, placeholder='Enter ' + ${field}">
+					</li>
+				</ul>
+
+				<ul class="no-dots">
+					<!-- Loop for read-only fields -->
+					<li th:each="field : ${nonRecurringFields}" th:if="${field == 'totalNonRecurringExpenditure'
+                                                        }">
+						<label th:text="${field}"></label>
+						<input type="text" th:attr="name=${field}, id=${field}, placeholder='Enter ' + ${field}"
+							th:value="${field == 'departmentId' ? departmentId : ''}" th:readonly="true" th:classappend="${
+                                       field == 'totalNonRecurringExpenditure'} ? 'readonly-input'">
+					</li>
+				</ul>
+
+				<button type="button" onclick="submitNonRecurringDetails()">Submit Non-Recurring Details</button>
+			</form>
+		</div>
+	</div>
+	<div id="reviewDetailsContainer" style="display: none;">
+		<p id="thankYouMessage">Thank you! </p>
+	</div>
+
+
+
+
+
+	
+
+
+</body>
+
+</html>
